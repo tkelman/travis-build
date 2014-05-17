@@ -3,6 +3,8 @@ module Travis
     class Script
       module Addons
         class Artifacts
+          REQUIRES_SUPER_USER = false
+
           attr_accessor :script, :config
           attr_writer :concurrency, :max_size
 
