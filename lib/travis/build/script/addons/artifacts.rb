@@ -5,8 +5,10 @@ module Travis
         class Artifacts
           REQUIRES_SUPER_USER = false
 
+          CONCURRENCY = 5
+          MAX_SIZE = Float(1024 * 1024 * 50)
+
           attr_accessor :script, :config
-          attr_writer :concurrency, :max_size
 
           def initialize(script, config)
             @script = script
@@ -15,14 +17,22 @@ module Travis
 
           def after_script
             return if config.empty?
-            script.if(runnable?) { run }
+            script.cmd('echo', echo: false, assert: false)
+
+            if pull_request?
+              script.cmd('echo "Artifacts support disabled for pull requests"', echo: false, assert: false)
+              return
+            end
+
+            unless branch_runnable?
+              script.cmd(%Q{echo "Artifacts support disabled for branch(es) #{branch.inspect}"}, echo: false, assert: false)
+              return
+            end
+
+            run
           end
 
           private
-
-          def runnable?
-            "($TRAVIS_PULL_REQUEST = false) && ($TRAVIS_BRANCH = #{branch})"
-          end
 
           def run
             override_controlled_params
@@ -30,7 +40,7 @@ module Travis
 
             return unless validate!
 
-            script.cmd('echo "Uploading Artifacts (beta)"', echo: false, assert: false)
+            script.cmd('echo -e "Uploading Artifacts (\033[33;1mBETA\033[0m)"', echo: false, assert: false)
             script.fold('artifacts.0') do
               install
               configure_env
@@ -46,7 +56,21 @@ module Travis
           end
 
           def branch
-            config[:branch] || 'master'
+            config[:branch]
+          end
+
+          def pull_request?
+            data.pull_request
+          end
+
+          def branch_runnable?
+            return true if branch.nil?
+            return branch.include?(data.branch) if branch.respond_to?(:each)
+            branch == data.branch
+          end
+
+          def data
+            script.data
           end
 
           def install
@@ -66,20 +90,19 @@ module Travis
 
           def override_controlled_params
             %w(max_size concurrency target_paths).map(&:to_sym).each do |k|
-              config[k] = send(k)
+              config.delete(k)
             end
-          end
-
-          def concurrency
-            @concurrency ||= Integer(ENV['ARTIFACTS_CONCURRENCY'] || 5)
-          end
-
-          def max_size
-            @max_size ||= Float(ENV['ARTIFACTS_MAX_SIZE'] || 1024 * 1024 * 5)
+            config[:max_size] = MAX_SIZE
+            config[:concurrency] = CONCURRENCY
+            config[:target_paths] = target_paths
           end
 
           def target_paths
-            @target_paths ||= '$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER'
+            @target_paths ||= File.join(
+              data.slug,
+              data.build[:number],
+              data.job[:number]
+            )
           end
 
           def configure_env
