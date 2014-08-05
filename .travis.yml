@@ -35,3 +35,6 @@ deploy:
   region: us-east-1
   on:
     branch: sf-sexp
+
+after_deploy:
+  - echo after_deploy
