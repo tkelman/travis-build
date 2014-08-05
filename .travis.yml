@@ -23,6 +23,8 @@ deploy:
   skip-cleanup: true
   endpoint: travis-build-examples.s3-website-us-east-1.amazonaws.com
   region: us-east-1
+  on:
+    branch: sf-debug-after_deploy
 
 after_deploy:
   - echo after_deploy
