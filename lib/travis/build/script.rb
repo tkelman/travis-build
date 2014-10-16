@@ -39,7 +39,7 @@ module Travis
       TEMPLATES_PATH = File.expand_path('../script/templates', __FILE__)
 
       STAGES = {
-        builtin: [:configure, :checkout, :pre_setup, :paranoid_mode, :export, :setup, :announce],
+        builtin: [:configure, :announce_system_info, :checkout, :pre_setup, :paranoid_mode, :export, :setup, :announce],
         custom:  [:before_install, :install, :before_script, :script, :after_result, :after_script]
       }
 
@@ -172,6 +172,12 @@ module Travis
 
         def fix_ps4
           set "PS4", "+ ", echo: false
+        end
+
+        def announce_system_info
+          fold 'system_info' do
+            cmd 'lsb_release -a || true'
+          end
         end
     end
   end
