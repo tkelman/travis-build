@@ -176,7 +176,7 @@ module Travis
 
         def announce_system_info
           fold 'system_info' do
-            cmd 'lsb_release -a || true'
+            cmd 'lsb_release -a 2>/dev/null || true'
           end
         end
     end
