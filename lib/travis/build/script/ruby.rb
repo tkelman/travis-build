@@ -12,10 +12,7 @@ module Travis
         include Bundler
 
         def announce_system_info
-          commands = [
-            'rvm list'
-          ]
-          super(commands)
+          super('rvm list')
         end
 
         def announce
