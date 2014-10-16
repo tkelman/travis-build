@@ -11,6 +11,13 @@ module Travis
         include RVM
         include Bundler
 
+        def announce_system_info
+          super
+          fold 'system_info.ruby' do
+            cmd 'rvm list'
+          end
+        end
+
         def announce
           super
           cmd 'gem --version', timing: false
