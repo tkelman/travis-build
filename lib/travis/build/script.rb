@@ -174,9 +174,12 @@ module Travis
           set "PS4", "+ ", echo: false
         end
 
-        def announce_system_info
+        def announce_system_info(*commands)
           fold 'system_info' do
             cmd 'lsb_release -a 2>/dev/null || true'
+            commands.each do |command|
+              cmd command
+            end
           end
         end
     end

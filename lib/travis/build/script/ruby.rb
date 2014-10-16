@@ -12,10 +12,10 @@ module Travis
         include Bundler
 
         def announce_system_info
-          super
-          fold 'system_info.ruby' do
-            cmd 'rvm list'
-          end
+          commands = [
+            'rvm list'
+          ]
+          super(commands)
         end
 
         def announce
